@@ -1,4 +1,4 @@
-package al
+package main
 
 // 1. 最小覆盖子串
 // 给你一个字符串 s 、一个字符串 t 。返回 s 中涵盖 t 所有字符的最小子串。如果 s 中不存在涵盖 t 所有字符的子串，则返回空字符串 "" 。
@@ -16,3 +16,28 @@ package al
 // 输入: s = "abcabcbb"
 // 输出: 3
 // 解释: 因为无重复字符的最长子串是 "abc"，所以其长度为 3。
+func lengthOfLongestSubstring(s string) int {
+	cnt := make(map[byte]int, 0)
+	ans := 0
+	r := -1
+	for l := 0; l < len(s); l++ {
+		if l != 0 {
+			delete(cnt, s[l-1])
+		}
+
+		for r+1 < len(s) && cnt[s[r+1]] == 0 {
+			cnt[s[r+1]]++
+			r++
+		}
+
+		ans = max(ans, r-l+1)
+	}
+	return ans
+}
+
+func max(x, y int) int {
+	if x > y {
+		return x
+	}
+	return y
+}
