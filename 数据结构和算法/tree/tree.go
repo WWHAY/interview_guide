@@ -446,3 +446,34 @@ func lowestCommonAncestor1(root, p, q *TreeNode) *TreeNode {
 
 	return nil
 }
+
+// 给你二叉树的根节点 root ，返回其节点值 自底向上的层序遍历 。 （即按从叶子节点所在层到根节点所在的层，逐层从左向右遍历）
+// 层次遍历
+func levelOrderBottom(root *TreeNode) [][]int {
+	if root == nil {
+		return nil
+	}
+	res := make([][]int, 0)
+	quene := []*TreeNode{root}
+	for len(quene) > 0 {
+		array := []int{}
+		length := len(quene)
+		for length > 0 {
+			node := quene[0]
+			quene = quene[1:]
+			array = append(array, node.Val)
+			if node.Left != nil {
+				quene = append(quene, node.Left)
+			}
+			if node.Right != nil {
+				quene = append(quene, node.Right)
+			}
+			length--
+		}
+		res = append(res, array)
+	}
+	for i := 0; i < len(res)/2; i++ {
+		res[i], res[len(res)-1-i] = res[len(res)-1-i], res[i]
+	}
+	return res
+}

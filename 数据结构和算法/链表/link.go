@@ -263,3 +263,106 @@ func detectCycle(head *ListNode) *ListNode {
 	return nil
 
 }
+
+// 给你两个 非空 的链表，表示两个非负的整数。它们每位数字都是按照 逆序 的方式存储的，并且每个节点只能存储 一位 数字。
+// 请你将两个数相加，并以相同形式返回一个表示和的链表。
+// 你可以假设除了数字 0 之外，这两个数都不会以 0 开头。
+// 这个题目的重点是逆序排列
+func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
+	var head *ListNode
+	var tail *ListNode
+	// 进位
+	carry := 0
+	for l1 != nil || l2 != nil {
+		n1, n2 := 0, 0
+		if l1 != nil {
+			n1 = l1.Val
+			l1 = l1.Next
+		}
+		if l2 != nil {
+			n2 = l2.Val
+			l2 = l2.Next
+		}
+
+		sum := n1 + n2 + carry
+		// 逆序排列，所以是个 --》十 --》百等，对10取模是位数，对10整数是进位数
+		sum, carry = sum%10, sum/10
+		if head == nil {
+			head = &ListNode{
+				Val: sum,
+			}
+			tail = head
+		} else {
+			tail.Next = &ListNode{
+				Val: sum,
+			}
+			tail = tail.Next
+		}
+	}
+	// 增加原始位数，需要增加一个节点
+	if carry > 0 {
+		tail.Next = &ListNode{
+			Val: carry,
+		}
+	}
+	return head
+}
+
+// 编写一个高效的算法来搜索 m x n 矩阵 matrix 中的一个目标值 target 。该矩阵具有以下特性：
+// 每行的元素从左到右升序排列。
+// 每列的元素从上到下升序排列。
+// 这个解法有点像是z行的那个算法题
+func searchMatrix(matrix [][]int, target int) bool {
+	if len(matrix) == 0 {
+		return false
+	}
+	// 从左上角到开始搜索
+	x, m, y := 0, len(matrix), len(matrix[0])-1
+	for x < m && y >= 0 {
+		if matrix[x][y] == target {
+			return true
+		}
+		if matrix[x][y] > target {
+			y--
+		} else {
+			x++
+		}
+	}
+	return false
+}
+
+// 给你一个链表，两两交换其中相邻的节点，并返回交换后链表的头节点。你必须在不修改节点内部的值的情况下完成本题（即，只能进行节点交换）。
+func swapPairs(head *ListNode) *ListNode {
+	dummyHead := &ListNode{Val: 0, Next: head}
+	temp := dummyHead
+	for temp.Next != nil && temp.Next.Next != nil {
+		// 这个是最关键的一步
+		node1 := temp.Next
+		node2 := temp.Next.Next
+		temp.Next = node2
+		node1.Next = node2.Next
+		node2.Next = node1
+		temp = node1
+	}
+	return dummyHead.Next
+}
+
+// 给你一个链表，删除链表的倒数第 n 个结点，并且返回链表的头结点。
+func removeNthFromEnd(head *ListNode, n int) *ListNode {
+	length := 0
+	temp := head
+	for temp != nil {
+		temp = temp.Next
+		length++
+	}
+	dummy := &ListNode{
+		Val:  0,
+		Next: head,
+	}
+	cur := dummy
+	for i := 0; i < length-n; i++ {
+		cur = cur.Next
+	}
+	cur.Next = cur.Next.Next
+	return dummy.Next
+}

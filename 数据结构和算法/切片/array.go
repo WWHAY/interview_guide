@@ -1,5 +1,7 @@
 package arrary
 
+import "sort"
+
 // 查找固定的值
 // 给定一个排序数组和一个目标值，在数组中找到目标值，并返回其索引。如果目标值不存在于数组中，返回它将会被按顺序插入的位置。
 // 请必须使用时间复杂度为 O(log n) 的算法。
@@ -75,4 +77,151 @@ func binarySearch(nums []int, target int, lower bool) int {
 		}
 	}
 	return ans
+}
+
+// 已知一个长度为 n 的数组，预先按照升序排列，经由 1 到 n 次 旋转 后，得到输入数组。例如，原数组 nums = [0,1,2,4,5,6,7] 在变化后可能得到：
+// 若旋转 4 次，则可以得到 [4,5,6,7,0,1,2]
+// 若旋转 7 次，则可以得到 [0,1,2,4,5,6,7]
+// 注意，数组 [a[0], a[1], a[2], ..., a[n-1]] 旋转一次 的结果为数组 [a[n-1], a[0], a[1], a[2], ..., a[n-2]] 。
+
+// 给你一个元素值 互不相同 的数组 nums ，它原来是一个升序排列的数组，并按上述情形进行了多次旋转。请你找出并返回数组中的 最小元素 。
+
+// 你必须设计一个时间复杂度为 O(log n) 的算法解决此问题。
+func findMin(nums []int) int {
+	low, high := 0, len(nums)-1
+	for low < high {
+		privot := low + (high-low)/2
+		if nums[privot] < nums[high] {
+			high = privot
+		} else {
+			low = privot + 1
+		}
+	}
+	return nums[low]
+}
+
+// 合并区间
+// 以数组 intervals 表示若干个区间的集合，其中单个区间为 intervals[i] = [starti, endi] 。
+// 请你合并所有重叠的区间，并返回 一个不重叠的区间数组，该数组需恰好覆盖输入中的所有区间 。
+
+func merge(intervals [][]int) [][]int {
+	// 讲数组按照左边界排序，可以直接使用sort的算法
+	sort.Slice(intervals, func(i, j int) bool {
+		return intervals[i][0] < intervals[j][0]
+	})
+
+	// end < start ：表示不重合，则加入区间
+	// end >= start ： 表示重合，则定义左右边界，确定下一次的循环，知道最后确定右边界
+	res := make([][]int, 0, len(intervals))
+	left, right := intervals[0][0], intervals[0][1]
+	for i := 1; i < len(intervals); i++ {
+		if right < intervals[i][0] {
+			res = append(res, []int{left, right})
+			left, right = intervals[i][0], intervals[i][1]
+		} else {
+			right = max(intervals[i][1], right)
+		}
+	}
+
+	// 可以直接考虑数组长度等于1的情况
+	res = append(res, []int{left, right})
+	return res
+}
+
+// 最大值
+func max(x, y int) int {
+	if x > y {
+		return x
+	}
+	return y
+}
+
+// 最小值
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
+// 给定一个整数数组 nums，将数组中的元素向右轮转 k 个位置，其中 k 是非负数。
+
+// 示例 1:
+
+// 输入: nums = [1,2,3,4,5,6,7], k = 3
+// 输出: [5,6,7,1,2,3,4]
+// 解释:
+// 向右轮转 1 步: [7,1,2,3,4,5,6]
+// 向右轮转 2 步: [6,7,1,2,3,4,5]
+// 向右轮转 3 步: [5,6,7,1,2,3,4]
+func rotate(nums []int, k int) {
+	newNums := make([]int, len(nums))
+	for i, v := range nums {
+		newNums[(i+k)%len(nums)] = v
+	}
+	// 数组是可以直接赋值的，但是切片不能直接等于
+	// nums = newNums 这个是错误的
+	copy(nums, newNums)
+}
+
+// 利用最大公约数求解问题，数组之间的替换
+func rotate1(nums []int, k int) {
+	n := len(nums)
+
+	// count 是最大调换次数
+	for start, count := 0, gcb(k, n); start < count; start++ {
+		pre, cur := nums[start], start
+		// 一次调换
+		for ok := true; ok; ok = cur != start {
+			next := (cur + k) % n
+			pre, nums[next], cur = nums[next], pre, next
+		}
+	}
+}
+
+// a和b的最大公约数
+func gcb(a, b int) int {
+	for a != 0 {
+		a, b = b%a, a
+	}
+	return b
+}
+
+// a和b的最小公倍数:最小公倍数=两数之积/最大公约数
+func lcm(a, b int) int {
+	return (a * b) / gcb(a, b)
+}
+
+// 给定一个 m x n 的矩阵，如果一个元素为 0 ，则将其所在行和列的所有元素都设为 0 。请使用 原地 算法。
+// step1: 记录首位是否是0，如果是0，则是true
+// 注意点：（第一行和第一列被修改，无法记录它们是否原本包含 000。因此我们需要额外使用两个标记变量分别记录第一行和第一列是否原本包含 000。）
+// step2：将元素所在列的行行首和列首改为0
+// step3: 遍历整个数组，从1开始遍历，更改元素值为0
+func setZeroes(matrix [][]int) {
+	n, m := len(matrix), len(matrix[0])
+	col0 := false
+	for _, r := range matrix {
+		if r[0] == 0 {
+			col0 = true
+		}
+		for j := 1; j < m; j++ {
+			if r[j] == 0 {
+				r[0] = 0
+				matrix[0][j] = 0
+			}
+		}
+	}
+
+	for i := n - 1; i >= 0; i-- {
+		for j := 1; j < m; j++ {
+			// 行首和列首为0，则表示为0
+			if matrix[i][0] == 0 || matrix[0][j] == 0 {
+				matrix[i][j] = 0
+			}
+		}
+
+		if col0 {
+			matrix[i][0] = 0
+		}
+	}
 }
