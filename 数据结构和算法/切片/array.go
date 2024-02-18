@@ -145,18 +145,18 @@ func min(x, y int) int {
 }
 
 // 给定一个整数数组 nums，将数组中的元素向右轮转 k 个位置，其中 k 是非负数。
-
 // 示例 1:
-
 // 输入: nums = [1,2,3,4,5,6,7], k = 3
 // 输出: [5,6,7,1,2,3,4]
 // 解释:
 // 向右轮转 1 步: [7,1,2,3,4,5,6]
 // 向右轮转 2 步: [6,7,1,2,3,4,5]
 // 向右轮转 3 步: [5,6,7,1,2,3,4]
-func rotate(nums []int, k int) {
+func rotateArray(nums []int, k int) {
+	// 辅助数组
 	newNums := make([]int, len(nums))
 	for i, v := range nums {
+		// 根据规律计算的
 		newNums[(i+k)%len(nums)] = v
 	}
 	// 数组是可以直接赋值的，但是切片不能直接等于
@@ -224,4 +224,67 @@ func setZeroes(matrix [][]int) {
 			matrix[i][0] = 0
 		}
 	}
+}
+
+// 给你一个满足下述两条属性的 m x n 整数矩阵：
+// 每行中的整数从左到右按非严格递增顺序排列。
+// 每行的第一个整数大于前一行的最后一个整数。
+// 给你一个整数 target ，如果 target 在矩阵中，返回 true ；否则，返回 false 。
+// 这个题的解法是似曾相识，可以使用二分查找，也可以使用右上角或者左下角的元素
+// 因为需要做加减法
+func searchMatrix(matrix [][]int, target int) bool {
+	if len(matrix) == 0 {
+		return false
+	}
+	m, n := len(matrix), len(matrix[0])
+	x, y := 0, n-1
+	for x < m && y >= 0 {
+		if matrix[x][y] == target {
+			return true
+		}
+		if matrix[x][y] > target {
+			y--
+		} else {
+			x++
+		}
+	}
+	return false
+}
+
+// 给定一个 n × n 的二维矩阵 matrix 表示一个图像。请你将图像顺时针旋转 90 度。
+// 你必须在 原地 旋转图像，这意味着你需要直接修改输入的二维矩阵。请不要 使用另一个矩阵来旋转图像。
+// 可以通过观察得到，旋转数组，可以先水平翻转，之后在对角线翻转
+// 水平轴翻转  matrix[row][col]= matrix[n−row−1][col]
+// 主对角线翻转 matrix[row][col] = matrix[col][row]
+// 但是上述的技巧只适合于n*n的矩阵
+func rotate(matrix [][]int) {
+	n := len(matrix)
+	// 水平翻转
+	for i := 0; i < n/2; i++ {
+		// 只需要将i对应的数组交换，因为列坐标不变
+		matrix[i], matrix[n-i-1] = matrix[n-i-1], matrix[i]
+	}
+
+	// 对角线
+	for i := 0; i < n; i++ {
+		for j := 0; j < i; j++ {
+			// 对角线下方的和对角线上方的做交换
+			matrix[i][j], matrix[j][i] = matrix[j][i], matrix[i][j]
+		}
+	}
+}
+
+func rotateAuxiliaryArry(matrix [][]int) {
+	n := len(matrix)
+	tmp := make([][]int, n)
+	for i := range tmp {
+		tmp[i] = make([]int, n)
+	}
+	// 根据规律可以知道，旋转之后的公式为：matrix[row][col] == matrixnew[col][n−row−1]
+	for i, row := range matrix {
+		for j, v := range row {
+			tmp[j][n-1-i] = v
+		}
+	}
+	copy(matrix, tmp) // 拷贝 tmp 矩阵每行的引用
 }
