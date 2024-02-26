@@ -310,3 +310,120 @@ func sortColors(nums []int) {
 		}
 	}
 }
+
+// 给定整数数组 nums 和整数 k，请返回数组中第 k 个最大的元素。
+// 请注意，你需要找的是数组排序后的第 k 个最大的元素，而不是第 k 个不同的元素。
+// 你必须设计并实现时间复杂度为 O(n) 的算法解决此问题。
+// 题解：只排序前k的数组
+func findKthLargest(nums []int, k int) int {
+	return quickSelect(nums, 0, len(nums)-1, len(nums)-k)
+}
+
+func quickSelect(nums []int, l, r, k int) int {
+	if l == r {
+		return nums[k]
+	}
+	position := nums[l]
+	i := l - 1
+	j := r + 1
+	for i < j {
+		for i++; nums[i] < position; i++ {
+		}
+		for j--; nums[j] > position; j-- {
+		}
+		// postion左边的元素小于position，右边的元素大于position
+		if i < j {
+			nums[i], nums[j] = nums[j], nums[i]
+		}
+	}
+
+	// 判断k的位置
+	if k <= j {
+		return quickSelect(nums, l, j, k)
+	} else {
+		return quickSelect(nums, j+1, r, k)
+	}
+}
+
+// 给定一个包含 n + 1 个整数的数组 nums ，其数字都在 [1, n] 范围内（包括 1 和 n），可知至少存在一个重复的整数。
+// 假设 nums 只有 一个重复的整数 ，返回 这个重复的数 。
+// 你设计的解决方案必须 不修改 数组 nums 且只用常量级 O(1) 的额外空间。
+// 题解：这个题目主要是关于快慢指针，判断是否是回环链表
+// a:表示链表头到环节点的,b是相遇点,c是相遇点到相交点的距离
+// 2(a+b)=a+b+kL --- > a=kL−b   --->a=(k−1)L+(L−b)=(k−1)L+c
+func findDuplicate(nums []int) int {
+	slow, fast := 0, 0
+	for slow, fast = nums[slow], nums[nums[fast]]; slow != fast; slow, fast = nums[slow], nums[nums[fast]] {
+	}
+	slow = 0
+	for slow != fast {
+		slow = nums[slow]
+		fast = nums[fast]
+	}
+	return slow
+}
+
+// 整数数组的一个 排列  就是将其所有成员以序列或线性顺序排列。
+// 例如，arr = [1,2,3] ，以下这些都可以视作 arr 的排列：[1,2,3]、[1,3,2]、[3,1,2]、[2,3,1] 。
+// 整数数组的 下一个排列 是指其整数的下一个字典序更大的排列。更正式地，如果数组的所有排列根据其字典顺序从小到大排列在一个容器中，
+// 那么数组的 下一个排列 就是在这个有序容器中排在它后面的那个排列。如果不存在下一个更大的排列，
+// 那么这个数组必须重排为字典序最小的排列（即，其元素按升序排列）。
+// 例如，arr = [1,2,3] 的下一个排列是 [1,3,2] 。
+// 类似地，arr = [2,3,1] 的下一个排列是 [3,1,2] 。
+// 而 arr = [3,2,1] 的下一个排列是 [1,2,3] ，因为 [3,2,1] 不存在一个字典序更大的排列。
+// 给你一个整数数组 nums ，找出 nums 的下一个排列。
+// 必须 原地 修改，只允许使用额外常数空间。
+func nextPermutation(nums []int) {
+	if len(nums) == 0 {
+		return
+	}
+
+	i, j, k := len(nums)-2, len(nums)-1, len(nums)-1
+	for i >= 0 && nums[i] >= nums[j] {
+		i--
+		j--
+	}
+
+	// i不是第一个值
+	if i >= 0 {
+		for nums[i] >= nums[k] {
+			k--
+		}
+		// 较大值和较小值的替换
+		nums[i], nums[k] = nums[k], nums[i]
+	}
+
+	// 后半段升序
+	for i, j := j, len(nums)-1; i < j; i, j = i+1, j-1 {
+		nums[i], nums[j] = nums[j], nums[i]
+	}
+}
+
+// 给定一个长度为 n 的 0 索引整数数组 nums。初始位置为 nums[0]。
+// 每个元素 nums[i] 表示从索引 i 向前跳转的最大长度。换句话说，如果你在 nums[i] 处，你可以跳转到任意 nums[i + j] 处:
+// 0 <= j <= nums[i]
+// i + j < n
+// 返回到达 nums[n - 1] 的最小跳跃次数。生成的测试用例可以到达 nums[n - 1]。
+// 题解：记录跳跃过程中的最大距离，如果大于最大距离可以直接跳跃过去，因为在i到end中随机产生的最大距离，都比end的坐标大
+// 所以将maxpostion赋值给end是合理的
+func jump(nums []int) int {
+	// 长度
+	length := len(nums)
+	// 步数
+	step := 0
+	// 最大距离
+	maxPosition := 0
+	// 哪个坐标达到最大距离
+	end := 0
+	// 不访问最后一个元素，因为在访问最后一个元素之前
+	// 边界一定会大于等于这个元素，否则就跳不到这个位置了，会增加额外的跳跃次数
+	for i := 0; i < length-1; i++ {
+		// 比较当前位置和最大距离的区别
+		maxPosition = max(maxPosition, i+nums[i])
+		if i == end {
+			end = maxPosition
+			step++
+		}
+	}
+	return step
+}

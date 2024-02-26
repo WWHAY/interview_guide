@@ -108,7 +108,7 @@ func check(p, q *TreeNode) bool {
 }
 
 // 给你一棵二叉树的根节点，返回该树的 直径 。
-// 二叉树的 直径 是指树中任意两个节点之间最长路径的 长度 。这条路径可能经过也可能不经过根节点 root 。
+// 二叉树的 直径 是指树中任意两个节点之间最长路径的长度 。这条路径可能经过也可能不经过根节点 root 。
 // 两节点之间路径的 长度 由它们之间边数表示。
 func diameterOfBinaryTree(root *TreeNode) int {
 	var depth func(root *TreeNode) int
@@ -476,4 +476,145 @@ func levelOrderBottom(root *TreeNode) [][]int {
 		res[i], res[len(res)-1-i] = res[len(res)-1-i], res[i]
 	}
 	return res
+}
+
+// 给定两个整数数组 inorder 和 postorder
+// 其中 inorder 是二叉树的中序遍历， postorder 是同一棵树的后序遍历
+// 请你构造并返回这颗 二叉树 。
+func buildTree(inorder []int, postorder []int) *TreeNode {
+	if len(inorder) == 0 || len(postorder) == 0 {
+		return nil
+	}
+	hashMap := map[int]int{}
+	// 记录数的索引值
+	for k, v := range inorder {
+		hashMap[v] = k
+	}
+	// 后序遍历的根节点是root本身
+	var build func(int, int) *TreeNode
+	build = func(l, r int) *TreeNode {
+		// 递归终止条件
+		if l > r {
+			return nil
+		}
+
+		val := postorder[len(postorder)-1]
+		postorder = postorder[:len(postorder)-1]
+
+		root := &TreeNode{
+			Val: val,
+		}
+
+		inorderRootIndex := hashMap[val]
+		// 先遍历右子树，再去遍历左子树，因为后序遍历的顺序是：左--右--根
+		root.Right = build(inorderRootIndex+1, r)
+		root.Left = build(l, inorderRootIndex-1)
+		return root
+	}
+	return build(0, len(inorder)-1)
+}
+
+// Trie（发音类似 "try"）或者说 前缀树 是一种树形数据结构，用于高效地存储和检索字符串数据集中的键。
+// 这一数据结构有相当多的应用情景，例如自动补完和拼写检查。
+// 请你实现 Trie 类：
+// Trie() 初始化前缀树对象。
+// void insert(String word) 向前缀树中插入字符串 word 。
+// boolean search(String word) 如果字符串 word 在前缀树中，返回 true（即，在检索之前已经插入）；否则，返回 false 。
+// boolean startsWith(String prefix) 如果之前已经插入的字符串 word 的前缀之一为 prefix ，返回 true ；否则，返回 false 。
+// 题解：最核心的问题是在于，前缀树的孩子节点以及标志字符串的结束
+type Trie struct {
+	child [26]*Trie
+	isEnd bool
+}
+
+func Constructor() Trie {
+	return Trie{}
+}
+
+// 插入字符串
+func (this *Trie) Insert(word string) {
+	node := this
+	for _, ch := range word {
+		ch -= 'a'
+		if node.child[ch] == nil {
+			node.child[ch] = &Trie{}
+		}
+		node = node.child[ch]
+	}
+	node.isEnd = true
+}
+
+// 查找前缀&字符串
+func (this *Trie) SearchPrefix(prefix string) *Trie {
+	node := this
+	for _, ch := range prefix {
+		ch -= 'a'
+		if node.child[ch] == nil {
+			return nil
+		}
+		node = node.child[ch]
+	}
+	return node
+}
+
+// 查找字符串
+func (this *Trie) Search(word string) bool {
+	node := this.SearchPrefix(word)
+	return node != nil && node.isEnd
+}
+
+// 是否包含前缀
+func (this *Trie) StartsWith(prefix string) bool {
+	return this.SearchPrefix(prefix) != nil
+}
+
+// 给定一个二叉树，找出其最小深度。
+// 最小深度是从根节点到最近叶子节点的最短路径上的节点数量。
+// 说明：叶子节点是指没有子节点的节点。
+// 题解：最短深度和最长深度的区别在于左右tree是不是为nil，0是最小值
+func minDepth(root *TreeNode) int {
+	if root == nil {
+		return 0
+	}
+
+	if root.Left == nil && root.Right == nil {
+		return 1
+	}
+	minD := math.MaxInt32
+	if root.Left != nil {
+		minD = min(minD, minDepth(root.Left))
+	}
+
+	if root.Right != nil {
+		minD = min(minD, minDepth(root.Right))
+	}
+
+	return minD + 1
+}
+
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
+// 给定二叉搜索树的根结点 root，返回值位于范围 [low, high] 之间的所有结点的值的和。
+// 题解：深度优先搜索，堆就是二叉搜索树的特殊格式：左子树的值一定小于右子树的值
+func rangeSumBST(root *TreeNode, low int, high int) int {
+	if root == nil {
+		return 0
+	}
+	// 如果root值大于high，那么选择左子树，因为左子树的所有节点的值都小于root
+	if root.Val > high {
+		return rangeSumBST(root.Left, low, high)
+	}
+
+	// 如果root的值小于low，那么选择右子树，因为右子树的值一定大于root
+	if root.Val < low {
+		return rangeSumBST(root.Right, low, high)
+	}
+
+	// 如果root是出于low和high之间的，那么就是左右子树同时进行深度优先搜索
+	return root.Val + rangeSumBST(root.Left, low, high) + rangeSumBST(root.Right, low, high)
 }
