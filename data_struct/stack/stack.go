@@ -160,3 +160,40 @@ func getString(stk []string) string {
 	}
 	return ret
 }
+
+// 给你一个整数数组 nums，有一个大小为 k 的滑动窗口从数组的最左侧移动到数组的最右侧。
+// 你只可以看到在滑动窗口内的 k 个数字。滑动窗口每次只向右移动一位。
+// 返回 滑动窗口中的最大值
+// 关键是要维持一个k空间的单调栈
+func maxSlidingWindow(nums []int, k int) []int {
+	// 初始化单调队列
+	q := []int{}
+	// 队列函数
+	var push func(i int)
+	push = func(i int) {
+		// 保持在k的范围内是两端的坐标最靠右
+		for len(q) > 0 && nums[i] >= nums[q[len(q)-1]] {
+			// 单调递减队列
+			q = q[:len(q)-1]
+		}
+		q = append(q, i)
+	}
+
+	// 初始化单调队列初始值
+	for i := 0; i < k; i++ {
+		push(i) // 在k的范围内，坐标对应的元素的单调递减队列
+	}
+	ans := []int{nums[q[0]]} // 初始化的时候已经计算出来，前k个元素的最大值是栈顶元素
+	// 之后的循环在于k-1索引之后的元素
+	// 滑动窗口控制，最右侧的元素，因为在单调队列维持的也就是滑动窗口从左到右的递减队列
+	for i := k; i < len(nums); i++ {
+		// 新的滑动窗口的值更新到队列中
+		push(i)
+		for q[0] <= i-k {
+			// 左侧指针已经大于窗口游标的最左侧的坐标了
+			q = q[1:]
+		}
+		ans = append(ans, nums[q[0]])
+	}
+	return ans
+}

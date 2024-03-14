@@ -618,3 +618,31 @@ func rangeSumBST(root *TreeNode, low int, high int) int {
 	// 如果root是出于low和high之间的，那么就是左右子树同时进行深度优先搜索
 	return root.Val + rangeSumBST(root.Left, low, high) + rangeSumBST(root.Right, low, high)
 }
+
+// 二叉树中的 路径 被定义为一条节点序列，序列中每对相邻节点之间都存在一条边。
+// 同一个节点在一条路径序列中 至多出现一次 。该路径 至少包含一个 节点，且不一定经过根节点。
+
+// 路径和 是路径中各节点值的总和。
+
+// 给你一个二叉树的根节点 root ，返回其 最大路径和 。
+// 题解：只取各个子节点最大值大于0的
+func maxPathSum(root *TreeNode) int {
+	if root == nil {
+		return 0
+	}
+	max_ans := math.MinInt32
+	var dfs func(root *TreeNode) int
+	dfs = func(root *TreeNode) int {
+		if root == nil {
+			return 0
+		}
+
+		l := max(dfs(root.Left), 0)
+		r := max(dfs(root.Right), 0)
+		sum := l + r + root.Val
+		max_ans = max(sum, max_ans)
+		return max(l, r) + root.Val
+	}
+	dfs(root)
+	return max_ans
+}

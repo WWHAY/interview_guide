@@ -427,3 +427,180 @@ func jump(nums []int) int {
 	}
 	return step
 }
+
+// 给定 n 个非负整数表示每个宽度为 1 的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。
+// 题解：双指针永远更新临近的柱状图的大小
+// 还有一种算法是记录右侧的最高值，和左侧的最高值做比较，取最小的，更新i的值
+// 其实比较难理解的是为什么取一侧就可以了，极端思路left和right中间的都小，那么其实水的最大深度也就是left和right的最小值
+// 因为两侧都有木板阻止水溜走
+func trap(height []int) int {
+	// 定义双指针以及左侧最大值和右侧最大值
+	max_left := 0
+	max_right := 0
+	left := 1
+	right := len(height) - 2
+	ans := 0
+	// 关键点，max_left=max(max_left,height[i-1])
+	// max_right=max(max_right,heigh[j+1])
+	// 所以可以得出当height[j+1]>height[i-1]==》max_right>max_left
+	// 取左右两侧最大值的最小值
+	for i := 1; i < len(height)-1; i++ {
+		// max_left<max_right
+		// 从左到右
+		if height[left-1] < height[right+1] {
+			max_left = max(max_left, height[left-1])
+			if max_left > height[left] {
+				ans += max_left - height[left]
+			}
+			left++
+		} else {
+			// 从右到左
+			max_right = max(max_right, height[right+1])
+			if max_right > height[right] {
+				ans += max_right - height[right]
+			}
+			right--
+		}
+	}
+	return ans
+}
+
+// 给定两个大小分别为 m 和 n 的正序（从小到大）数组 nums1 和 nums2。请你找出并返回这两个正序数组的 中位数 。
+// 算法的时间复杂度应该为 O(log (m+n)) 。
+// 题解：合并数组，求解中位数
+func findMedianSortedArrays(nums1 []int, nums2 []int) float64 {
+	arrays := mergeArray(nums1, nums2)
+	if len(arrays)%2 == 0 {
+		left := float64(arrays[len(arrays)/2-1])
+		right := float64(arrays[len(arrays)/2])
+		return (left + right) / 2
+	}
+	return float64(arrays[(len(arrays)-1)/2])
+}
+
+func mergeArray(nums1, nums2 []int) []int {
+	if len(nums1) == 0 {
+		return nums2
+	}
+
+	if len(nums2) == 0 {
+		return nums1
+	}
+
+	ans := []int{}
+	first, second := 0, 0
+	for first < len(nums1) && second < len(nums2) {
+		if nums1[first] < nums2[second] {
+			ans = append(ans, nums1[first])
+			first++
+		} else {
+			ans = append(ans, nums2[second])
+			second++
+		}
+	}
+
+	if first == len(nums1) {
+		ans = append(ans, nums2[second:]...)
+	}
+
+	if second == len(nums2) {
+		ans = append(ans, nums1[first:]...)
+	}
+	return ans
+}
+
+// 按照国际象棋的规则，皇后可以攻击与之处在同一行或同一列或同一斜线上的棋子。
+
+// n 皇后问题 研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并且使皇后彼此之间不能相互攻击。
+
+// 给你一个整数 n ，返回所有不同的 n 皇后问题 的解决方案。
+
+// 每一种解法包含一个不同的 n 皇后问题 的棋子放置方案，该方案中 'Q' 和 '.' 分别代表了皇后和空位。
+// 题解，回溯---定义变量和临时数组，初始化，确定回溯函数，恢复原始状态
+var solutions [][]string
+
+func solveNQueens(n int) [][]string {
+	solutions = [][]string{}
+	// 初始化
+	queens := make([]int, n)
+	for i := 0; i < n; i++ {
+		queens[i] = -1
+	}
+	columns, d1s, d2s := map[int]bool{}, map[int]bool{}, map[int]bool{}
+	backtrack1(queens, n, 0, columns, d1s, d2s)
+	return solutions
+}
+
+// 定义回溯函数,关键点在于queenes[row] = i -->表示第row的第i列
+func backtrack1(queens []int, n, row int, columns, diagonals1, diagonals2 map[int]bool) {
+	// 结束终止条件
+	if row == n {
+		board := generateBoard(queens, n)
+		solutions = append(solutions, board)
+		return
+	}
+
+	for i := 0; i < n; i++ {
+		if columns[i] {
+			continue
+		}
+
+		// 左对角线，行下标和列下表之差相等
+		diagonal1 := row - i
+		if diagonals1[diagonal1] {
+			continue
+		}
+
+		// 右对角线, 行下标和列小标之和相等
+		diagonal2 := row + i
+		if diagonals2[diagonal2] {
+			continue
+		}
+		// 满足条件可以放置
+		queens[row] = i
+		columns[i] = true
+		diagonals1[diagonal1], diagonals2[diagonal2] = true, true
+		backtrack1(queens, n, row+1, columns, diagonals1, diagonals2)
+
+		// 复原
+		queens[row] = -1
+		delete(columns, i)
+		delete(diagonals1, diagonal1)
+		delete(diagonals2, diagonal2)
+	}
+}
+
+// 生成board
+func generateBoard(queens []int, n int) []string {
+	board := []string{}
+	// 根据queens的数组生成对应的
+	for i := 0; i < n; i++ {
+		row := make([]byte, n)
+		for j := 0; j < n; j++ {
+			row[j] = '.'
+		}
+		// 每一行都会放置一个皇后，所以初始值是-1，之后会更新对应的值的，
+		// 所以走完回溯的Queen的row对应的值一定是对应防止皇后的列
+		row[queens[i]] = 'Q'
+		board = append(board, string(row))
+	}
+	return board
+}
+
+// 给你一个下标从 0 开始、由正整数组成的数组 nums 。
+// 你可以在数组上执行下述操作 任意 次：
+// 选中一个同时满足 0 <= i < nums.length - 1 和 nums[i] <= nums[i + 1] 的整数 i 。将元素 nums[i + 1] 替换为 nums[i] + nums[i + 1] ，并从数组中删除元素 nums[i] 。
+// 返回你可以从最终数组中获得的 最大 元素的值。
+// 观察合并的结果，前面的<= 后面的，后面如果小的话
+// 如果前面一个元素的值>后面的元素，则后面的元素必然不会参与合并
+func maxArrayValue(nums []int) int64 {
+	sum := int64(nums[len(nums)-1])
+	for i := len(nums) - 2; i >= 0; i-- {
+		if int64(nums[i]) <= sum {
+			sum += int64(nums[i])
+		} else {
+			sum = int64(nums[i])
+		}
+	}
+	return sum
+}

@@ -421,3 +421,139 @@ func copyRandomList(head *Node) *Node {
 	}
 	return dummy
 }
+
+// 给你链表的头节点 head ，每 k 个节点一组进行翻转，请你返回修改后的链表。
+
+// k 是一个正整数，它的值小于或等于链表的长度。如果节点总数不是 k 的整数倍，那么请将最后剩余的节点保持原有顺序。
+
+// 你不能只是单纯的改变节点内部的值，而是需要实际进行节点交换。
+// 题解：双指针：pre和end将链表分为：已翻转、待翻转、未反转
+/**
+ * Definition for singly-linked list.
+ * type ListNode struct {
+ *     Val int
+ *     Next *ListNode
+ * }
+ */
+func reverseKGroup(head *ListNode, k int) *ListNode {
+	if head == nil {
+		return nil
+	}
+	// 翻转链表
+	reverseList := func(node *ListNode) *ListNode {
+		var pre *ListNode
+		cur := node
+		for cur != nil {
+			next := cur.Next
+			cur.Next = pre
+			pre = cur
+			cur = next
+		}
+		return pre
+	}
+	dummy := &ListNode{
+		Next: head,
+	}
+
+	pre, end := dummy, dummy
+	for end != nil {
+		for i := 0; i < k && end != nil; i++ {
+			end = end.Next
+		}
+		if end == nil {
+			break
+		}
+		next := end.Next
+		start := pre.Next
+		end.Next = nil
+		pre.Next = reverseList(start)
+		start.Next = next
+		pre = start
+		end = pre
+	}
+	return dummy.Next
+}
+
+// 给你一个链表数组，每个链表都已经按升序排列。
+
+// 请你将所有链表合并到一个升序链表中，返回合并后的链表。
+// 题解：两个两的合并，顺序合并，还可以用分治减少计算次数：宣传减少k/2
+func mergeKLists(lists []*ListNode) *ListNode {
+	m := len(lists)
+
+	if m == 0 {
+		return nil
+	}
+
+	if m == 1 {
+		return lists[0]
+	}
+
+	// 合并
+	left := mergeKLists(lists[:m/2])  // 合并左半部分
+	right := mergeKLists(lists[m/2:]) // 合并右部分
+	return mergerTwoList(left, right) // 最后组合合并
+}
+func mergerTwoList(list1, list2 *ListNode) *ListNode {
+	l1, l2 := list1, list2
+	if l1 == nil {
+		return l2
+	}
+
+	if l2 == nil {
+		return l1
+	}
+
+	head := &ListNode{}
+	node := head
+	for l1 != nil && l2 != nil {
+		if l1.Val < l2.Val {
+			node.Next = l1
+			l1 = l1.Next
+		} else {
+			node.Next = l2
+			l2 = l2.Next
+		}
+		node = node.Next
+	}
+	if l1 != nil {
+		node.Next = l1
+	}
+
+	if l2 != nil {
+		node.Next = l2
+	}
+
+	return head.Next
+}
+
+// 给你两个链表 list1 和 list2 ，它们包含的元素分别为 n 个和 m 个。
+// 请你将 list1 中下标从 a 到 b 的全部节点都删除，并将list2 接在被删除节点的位置。
+// 题解：a的前置和b的后置，list2的尾节点
+func mergeInBetween(list1 *ListNode, a int, b int, list2 *ListNode) *ListNode {
+	if list1 == nil {
+		return nil
+	}
+
+	if list2 == nil {
+		return list1
+	}
+	// 计算出a前置节点
+	pre := list1
+	for i := 0; i < a-1; i++ {
+		pre = pre.Next
+	}
+	end := list1
+	// 计算出b的前置节点
+	for i := 0; i < b; i++ {
+		end = end.Next
+	}
+
+	pre.Next = list2
+	for list2.Next != nil {
+		list2 = list2.Next
+	}
+
+	list2.Next = end.Next
+	return list1
+}

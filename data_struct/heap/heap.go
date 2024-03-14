@@ -1,6 +1,9 @@
 package heap
 
-import "container/heap"
+import (
+	"container/heap"
+	"sort"
+)
 
 // 给你一个整数数组 nums 和一个整数 k ，请你返回其中出现频率前 k 高的元素。你可以按 任意顺序 返回答案。
 // 题解：实现一个堆的interface，即是实现了这个堆，golang中有堆函数，可以直接套用
@@ -100,3 +103,75 @@ func maxHeap(nums []int, i, heapSize int) {
 		maxHeap(nums, largest, heapSize)
 	}
 }
+
+// 中位数是有序整数列表中的中间值。如果列表的大小是偶数，则没有中间值，中位数是两个中间值的平均值。
+
+// 例如 arr = [2,3,4] 的中位数是 3 。
+// 例如 arr = [2,3] 的中位数是 (2 + 3) / 2 = 2.5 。
+// 实现 MedianFinder 类:
+
+// MedianFinder() 初始化 MedianFinder 对象。
+
+// void addNum(int num) 将数据流中的整数 num 添加到数据结构中。
+
+// double findMedian() 返回到目前为止所有元素的中位数。与实际答案相差 10-5 以内的答案将被接受。
+// 题解：实现一个堆的push和pop，默认是最小堆，pop弹出来的是最小的元素，对于minQ和maxQ的话，maxQ天然是递增的顺序，minQ需要加入负数
+// 1，2,3,4,5 -- minQ(-3,-2,-1) --- 才能保证最大值能够被弹出来，maxQ（4,5）-- 天然是递增的，可以保证最小值被弹出来
+// initSlice是递增排列，对于heap也是的
+type MedianFinder struct {
+	minQ, maxQ hp
+}
+
+func Constructor() MedianFinder {
+	return MedianFinder{}
+}
+
+func (this *MedianFinder) AddNum(num int) {
+	min, max := &this.minQ, &this.maxQ
+	if min.Len() == 0 || -min.IntSlice[0] >= num {
+		// 将数值加入到minQ
+		heap.Push(min, -num)
+		// 奇数变偶数
+		if max.Len()+1 < min.Len() {
+			heap.Push(max, -heap.Pop(min).(int))
+		}
+	} else {
+		// 将数值加入到maxQ中，同时检查长度看是否将maxQ的最小值加入到minQ中
+		heap.Push(max, num)
+		if max.Len() > min.Len() {
+			heap.Push(min, -heap.Pop(max).(int))
+		}
+	}
+}
+
+func (this *MedianFinder) FindMedian() float64 {
+	min, max := this.minQ, this.maxQ
+	if min.Len() == max.Len() {
+		return float64(max.IntSlice[0]-min.IntSlice[0]) / 2
+	}
+	return float64(-min.IntSlice[0])
+}
+
+type hp struct {
+	sort.IntSlice
+}
+
+// 递减的顺序排列 --- 堆
+func (h *hp) Push(v interface{}) {
+	h.IntSlice = append(h.IntSlice, v.(int))
+}
+
+// 堆是最小堆 -- 堆顶元素是最小值
+func (h *hp) Pop() interface{} {
+	a := h.IntSlice
+	v := a[len(a)-1]
+	h.IntSlice = a[:len(a)-1]
+	return v
+}
+
+/**
+ * Your MedianFinder object will be instantiated and called as such:
+ * obj := Constructor();
+ * obj.AddNum(num);
+ * param_2 := obj.FindMedian();
+ */
